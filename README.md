@@ -1,5 +1,36 @@
 # Grief Support Application Development Plan
 
+**IMPORTANT SETUP NOTE:**
+
+This application requires Firebase. Before you can run or deploy it successfully:
+
+1.  **Create a Firebase Project:**
+    *   Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
+    *   In your new Firebase project, register a **Web app**.
+    *   During app registration, Firebase will provide a `firebaseConfig` object (with `apiKey`, `authDomain`, etc.).
+
+2.  **Update Local Configuration:**
+    *   Copy the `firebaseConfig` object provided by Firebase.
+    *   Open `src/services/firebaseConfig.js` in this project.
+    *   **Replace the placeholder values in the `firebaseConfig` object with your actual project keys.** The application will display a prominent warning on screen if placeholder values are still present.
+
+3.  **Initialize Firebase Locally:**
+    *   Install the Firebase CLI: `npm install -g firebase-tools`
+    *   Login to Firebase: `firebase login`
+    *   Navigate to this project's root directory in your terminal.
+    *   Run `firebase init` and follow the prompts:
+        *   Select features: `Firestore`, `Functions`, `Hosting`.
+        *   Link to your `existing project` (created in step 1).
+        *   Set Firestore rules file to: `firebase/firestore.rules`.
+        *   Set Functions language to: `JavaScript`. (Choose Yes for ESLint and npm install).
+        *   Set Hosting public directory to: `public`. (Configure as SPA: Yes; GitHub deploys: No for now).
+    *   This will create/update `firebase.json` and `.firebaserc`. Verify paths in `firebase.json` if needed.
+
+**Without completing these steps, Firebase integration will not work.**
+
+---
+# Grief Support Application Development Plan
+
 This document outlines the development plan for the Grief Support Application.
 
 ## Core Design Philosophy

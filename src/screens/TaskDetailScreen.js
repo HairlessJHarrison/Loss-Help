@@ -83,25 +83,18 @@ const taskDetailsData = {
         importantNote: "Life insurance claims can provide financial support for funeral costs and other expenses."
     }
 };
+window.taskDetailsData = taskDetailsData; // Make available globally for now
 
-function renderTaskDetailScreen(detailKey, taskId, phaseKey, transitionType) {
-    const detailData = taskDetailsData[detailKey];
-    const phaseAllTasks = allTasks[phaseKey]; // Accessing global allTasks from PhaseTaskListScreen.js
+export function renderTaskDetailScreen(detailKey, taskId, phaseKey, container, transitionType) {
+    const detailData = window.taskDetailsData[detailKey]; // Use global
+    const phaseAllTasks = window.allTasks[phaseKey];
     const currentTask = phaseAllTasks ? phaseAllTasks.tasks.find(t => t.id === taskId) : null;
 
     if (!detailData || !currentTask) {
-        // Attempt to render into the current slide-in container if it exists, or root.
-        let container = document.querySelector('.screen-slide-in.active') || document.getElementById('root');
-        if (container.classList.contains('screen-slide-in') && !container.classList.contains('active')) {
-            // If a slide-in container exists but is not active, it might be the one we're trying to reuse or a previous one.
-            // Default to root if the found container is not the active one we are trying to load into.
-             container = document.getElementById('root');
-        }
-        container.innerHTML = `<p>Error: Task details not found for ${detailKey}/${taskId}.</p><button onclick="loadScreen('${phaseKey || 'dashboard'}')">Back</button>`;
+        container.innerHTML = `<p>Error: Task details not found for ${detailKey}/${taskId}.</p><button onclick="window.loadScreen('${phaseKey || 'dashboard'}')">Back</button>`;
         return;
     }
 
-    const root = document.getElementById('root'); // Keep root reference for overall page structure
     let stepsHtml = '';
     if (detailData.actionableSteps && detailData.actionableSteps.length > 0) {
         stepsHtml = '<ul>';
@@ -111,15 +104,34 @@ function renderTaskDetailScreen(detailKey, taskId, phaseKey, transitionType) {
         stepsHtml += '</ul>';
     }
 
-    // Create a new container for this screen to manage its slide-in independently
-    const screenContainer = document.createElement('div');
-    screenContainer.className = 'task-detail-screen'; // General class for styling
-    screenContainer.id = detailKey + 'Screen'; // Unique ID
+    const screenHtml = `
+        <div class="task-detail-screen" id="${detailKey}Screen">
+            <header class="task-detail-header">
+                <a href="#" class="back-button-icon" data-target-phase="${phaseKey}">&lt;</a>
+                <h2>${detailData.title}</h2>
+            </header>
+            <div class="task-detail-content">
+                ${detailData.description ? `<h3>Description</h3><p>${detailData.description}</p>` : ''}
+                ${stepsHtml ? `<h3>Actionable Steps</h3>${stepsHtml}` : ''}
+                ${detailData.importantNote ? `<div class="important-note"><h3>Important Note</h3><p>${detailData.importantNote}</p></div>` : ''}
+                <button class="mark-complete-button ${currentTask.completed ? 'completed' : ''}" data-task-id="${taskId}">
+                    ${currentTask.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
+                </button>
+            </div>
+        </div>
+    `;
 
-    screenContainer.innerHTML = `
-        <header class="task-detail-header">
-            <a href="#" class="back-button-icon" data-target-phase="${phaseKey}">&lt;</a>
-            <h2>${detailData.title}</h2>
+    container.innerHTML = screenHtml; // Populate the container
+
+    // screenContainer is now 'container' if passed for slide-in, or container.firstChild if root was container
+    const screenElement = (transitionType === 'slide-in' && container.classList.contains('screen-slide-in')) ? container : container.firstChild;
+
+    // Ensure the main screen element has the ID for other querySelectors if container was root
+    if (screenElement && screenElement !== container && !screenElement.id) {
+        screenElement.id = detailKey + 'Screen';
+    } else if (screenElement === container && !container.id) {
+         container.id = detailKey + 'Screen';
+    }
         </header>
         <div class="task-detail-content">
             ${detailData.description ? `<h3>Description</h3><p>${detailData.description}</p>` : ''}
@@ -131,21 +143,6 @@ function renderTaskDetailScreen(detailKey, taskId, phaseKey, transitionType) {
         </div>
     `;
 
-    // Clear only if not a slide-in, or manage existing slide-ins.
-    // For slide-in, we append. app.js will handle removing previous slide-in if necessary.
-    if (transitionType !== 'slide-in') {
-         root.innerHTML = '';
-    }
-    root.appendChild(screenContainer);
-
-
-    if (transitionType === 'slide-in') {
-        screenContainer.classList.add('screen-slide-in'); // Add class for slide-in styling
-        void screenContainer.offsetWidth; // Trigger reflow
-        screenContainer.classList.add('active'); // Activate slide-in animation
-    }
-
-
     // Event Listeners
     screenContainer.querySelector('.back-button-icon').addEventListener('click', (e) => {
         e.preventDefault();
@@ -155,16 +152,16 @@ function renderTaskDetailScreen(detailKey, taskId, phaseKey, transitionType) {
             screenContainer.classList.remove('active'); // Trigger slide-out
             // Wait for animation then load previous screen and remove this one
             setTimeout(() => {
-                screenContainer.remove();
-                loadScreen(targetPhase, { transition: 'slide-in' }); // Previous screen also slides in
+                // screenElement.remove(); // app.js will handle removal of the slide-in container
+                window.loadScreen(targetPhase, { transition: 'slide-in' }); // Previous screen also slides in
             }, 500);
         } else {
-            screenContainer.remove(); // Remove if not part of slide transition (e.g. direct load)
-            loadScreen(targetPhase);
+            // screenElement.remove(); // app.js handles removal
+            window.loadScreen(targetPhase);
         }
     });
 
-    const completeButton = screenContainer.querySelector('.mark-complete-button');
+    const completeButton = screenElement.querySelector('.mark-complete-button');
     completeButton.addEventListener('click', function() {
         const taskToUpdate = phaseAllTasks.tasks.find(t => t.id === taskId);
         if (taskToUpdate) {
@@ -174,7 +171,7 @@ function renderTaskDetailScreen(detailKey, taskId, phaseKey, transitionType) {
             // Later: Update this in Firestore via API & sync with PhaseTaskListScreen display
             console.log(`Task ${taskId} completion toggled to ${taskToUpdate.completed} from details screen.`);
             // Also update the global allTasks object so the list screen reflects change
-            const globalTask = allTasks[phaseKey].tasks.find(t => t.id === taskId);
+            const globalTask = window.allTasks[phaseKey].tasks.find(t => t.id === taskId);
             if(globalTask) globalTask.completed = taskToUpdate.completed;
         }
     });

@@ -1,7 +1,9 @@
 // src/screens/WelcomeScreen.js
-function renderWelcomeScreen() {
-    const root = document.getElementById('root');
-    root.innerHTML = `
+import { functions } from '../services/firebaseConfig.js'; // Import the functions instance
+import { httpsCallable } from "firebase/functions"; // Import httpsCallable
+
+export function renderWelcomeScreen(container) { // Added export, added container argument
+    container.innerHTML = `
         <div class="welcome-screen" id="welcomeScreen">
             <div class="app-name">GriefSupportApp</div>
             <h1 class="welcome-heading">I am so sorry for your loss.</h1>
@@ -21,22 +23,39 @@ function renderWelcomeScreen() {
                 <h3>Download Checklist</h3>
                 <p>Enter your email to receive a printable checklist template.</p>
                 <input type="email" id="emailInput" placeholder="your.email@example.com" />
+                <p id="emailStatusMessage" style="margin-top:10px; min-height:1.2em;"></p>
                 <button id="sendEmailButton">Send</button>
                 <button id="cancelEmailButton" class="cancel">Cancel</button>
             </div>
         </div>
     `;
 
-    // Event Listeners
-    const downloadButton = document.getElementById('downloadChecklist');
-    const guidedButton = document.getElementById('guidedChecklist');
-    const fullSupportButton = document.getElementById('fullSupport');
-    const emailModal = document.getElementById('emailModal');
-    const sendEmailButton = document.getElementById('sendEmailButton');
-    const cancelEmailButton = document.getElementById('cancelEmailButton');
-    const emailInput = document.getElementById('emailInput');
+    // Event Listeners - ensure they are queried from the container or document if IDs are unique
+    const welcomeScreenElement = container.firstChild; // Assuming the screen is the first child
+    const downloadButton = welcomeScreenElement.querySelector('#downloadChecklist');
+    const guidedButton = welcomeScreenElement.querySelector('#guidedChecklist');
+    const fullSupportButton = welcomeScreenElement.querySelector('#fullSupport');
+
+    // Modal elements are outside welcomeScreenElement if modal is sibling in container
+    // However, if modal is inside welcomeScreenElement (as per current HTML structure), query from there.
+    // Let's assume modal is a direct child of 'container' for wider accessibility if needed,
+    // or ensure unique IDs if it's inside welcomeScreenElement.
+    // Based on current HTML, modal is sibling to welcome-screen, so query from container.
+    const emailModal = container.querySelector('#emailModal');
+    const sendEmailButton = container.querySelector('#sendEmailButton');
+    const cancelEmailButton = container.querySelector('#cancelEmailButton');
+    const emailInput = container.querySelector('#emailInput');
+    const emailStatusMessage = container.querySelector('#emailStatusMessage');
+
 
     downloadButton.addEventListener('click', () => {
+        const user = window.getCurrentUser();
+        if (user && user.email) {
+            emailInput.value = user.email; // Pre-fill if user is logged in
+        } else {
+            emailInput.value = ''; // Clear if no user or no email
+        }
+        emailStatusMessage.textContent = ''; // Clear previous messages
         emailModal.style.display = 'flex';
     });
 
@@ -44,39 +63,50 @@ function renderWelcomeScreen() {
         emailModal.style.display = 'none';
     });
 
-    sendEmailButton.addEventListener('click', () => {
+    sendEmailButton.addEventListener('click', async () => {
         const email = emailInput.value;
-        if (email && email.includes('@')) { // Basic email validation
-            console.log('Email submitted:', email);
-            // Here, you would typically call an API to send the email.
-            // POST /userActions/sendChecklistEmail with { email }
-            alert('Checklist will be sent to ' + email + ' (simulation).');
-            emailModal.style.display = 'none';
-            emailInput.value = ''; // Clear input
+        emailStatusMessage.textContent = ''; // Clear previous messages
+
+        if (email && email.includes('@')) {
+            sendEmailButton.disabled = true;
+            emailStatusMessage.textContent = 'Sending...';
+            try {
+                const sendChecklistEmailFunction = httpsCallable(functions, 'sendChecklistEmail');
+                const result = await sendChecklistEmailFunction({ email: email });
+
+                console.log('Cloud function result:', result.data);
+                emailStatusMessage.style.color = 'green';
+                emailStatusMessage.textContent = result.data.message;
+                // Optionally close modal after a delay
+                setTimeout(() => {
+                    emailModal.style.display = 'none';
+                    emailInput.value = '';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error calling sendChecklistEmail function:', error);
+                emailStatusMessage.style.color = 'red';
+                emailStatusMessage.textContent = 'Error: ' + error.message;
+            } finally {
+                sendEmailButton.disabled = false;
+            }
         } else {
-            alert('Please enter a valid email address.');
+            emailStatusMessage.style.color = 'red';
+            emailStatusMessage.textContent = 'Please enter a valid email address.';
         }
     });
 
-    function navigateToNextScreen(option) {
-        console.log(option + ' chosen. Navigating to login/dashboard (simulation)...');
-        const welcomeScreenElement = document.getElementById('welcomeScreen');
-        welcomeScreenElement.classList.add('fade-out');
-        // Simulate loading next screen after fade
-        setTimeout(() => {
-                loadScreen('login'); // MODIFIED LINE
-            }, 1000);
+    function navigateToApp(option) {
+        console.log(option + ' chosen.');
+        const user = window.getCurrentUser();
+        if (user) {
+            window.loadScreen('dashboard'); // If user logged in, go to dashboard
+        } else {
+            window.loadScreen('login'); // Else, go to login
+        }
     }
-
-    guidedButton.addEventListener('click', () => {
-        navigateToNextScreen('Guided Checklist');
-    });
-
-    fullSupportButton.addEventListener('click', () => {
-        navigateToNextScreen('Full Support');
-    });
+    guidedButton.addEventListener('click', () => navigateToApp('Guided Checklist'));
+    fullSupportButton.addEventListener('click', () => navigateToApp('Full Support'));
 }
 
-// Expose the function to be called from app.js or index.html
-// For now, directly call if app.js is simple
-// In a more structured app, app.js would manage screen rendering.
+// Removed direct calls and DOMContentLoaded listener

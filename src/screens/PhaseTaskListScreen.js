@@ -28,10 +28,10 @@ const allTasks = {
     }
 };
 
-function renderPhaseTaskListScreen(phaseKey, container = document.getElementById('root')) {
+export function renderPhaseTaskListScreen(phaseKey, container, transitionType) { // Added export, transitionType might not be used here directly but good for consistency
     const phaseData = allTasks[phaseKey];
     if (!phaseData) {
-        container.innerHTML = `<p>Error: Task phase not found.</p><button onclick="loadScreen('dashboard')">Back to Dashboard</button>`;
+        container.innerHTML = `<p>Error: Task phase not found for ${phaseKey}.</p><button onclick="window.loadScreen('dashboard')">Back to Dashboard</button>`;
         return;
     }
 
@@ -66,10 +66,10 @@ function renderPhaseTaskListScreen(phaseKey, container = document.getElementById
         if (container.classList.contains('screen-slide-in')) {
             container.classList.remove('active'); // Trigger slide out
             setTimeout(() => {
-                loadScreen('dashboard');
+                window.loadScreen('dashboard');
             }, 500); // time for slide animation
         } else {
-            loadScreen('dashboard'); // Navigate back to dashboard
+            window.loadScreen('dashboard'); // Navigate back to dashboard
         }
     });
 
@@ -81,7 +81,7 @@ function renderPhaseTaskListScreen(phaseKey, container = document.getElementById
             const detailsScreen = this.dataset.detailsScreen;
             const taskId = this.dataset.taskId;
             console.log('Navigating to task detail:', detailsScreen, 'for task ID:', taskId);
-            loadScreen(detailsScreen, { taskId: taskId, phaseKey: phaseKey, transition: 'slide-in' });
+            window.loadScreen(detailsScreen, { taskId: taskId, phaseKey: phaseKey, transition: 'slide-in' });
         });
     });
 
@@ -100,3 +100,4 @@ function renderPhaseTaskListScreen(phaseKey, container = document.getElementById
         });
     });
 }
+window.allTasks = allTasks; // Make available globally for now

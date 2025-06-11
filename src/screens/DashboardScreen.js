@@ -1,12 +1,17 @@
 // src/screens/DashboardScreen.js
-function renderDashboardScreen() {
-    const root = document.getElementById('root');
-    root.innerHTML = `
+// No direct Firebase import needed here if app.js handles signOut and user state
+
+export function renderDashboardScreen(container) {
+    const user = window.getCurrentUser(); // Get user from global state set by app.js
+    const userName = user ? (user.displayName || user.email) : "";
+
+    container.innerHTML = `
         <div class="dashboard-screen" id="dashboardScreen">
             <header class="dashboard-header">
-                <h2>Hello,</h2> {/* Personalized name will be added later */}
+                <h2>Hello, ${userName ? userName : 'Guest'}</h2>
             </header>
             <div class="dashboard-cards-container">
+                {/* Cards are assumed to be the same as before */}
                 <div class="dashboard-card" data-target-screen="phase1Tasks">
                     <div class="card-icon icon-calendar-sunrise"></div>
                     <h3>Phase 1: The First Few Days</h3>
@@ -33,22 +38,26 @@ function renderDashboardScreen() {
     `;
 
     // Event Listeners for cards
-    const cards = document.querySelectorAll('.dashboard-card');
-    cards.forEach(card => {
-        card.addEventListener('click', () => {
-            const targetScreen = card.dataset.targetScreen;
-            console.log('Navigating to:', targetScreen);
-            // Actual navigation will be implemented using loadScreen or a similar mechanism
-            // For now, it's a placeholder:
-                // alert('Navigating to ' + targetScreen + ' (not yet implemented).');
-                loadScreen(targetScreen, { transition: 'slide-in' });
+    const dashboardScreenElement = container.firstChild; // dashboard-screen div
+
+    // Event Listeners for cards
+    dashboardScreenElement.querySelectorAll('.dashboard-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const targetScreen = this.dataset.targetScreen;
+            window.loadScreen(targetScreen, { transition: 'slide-in' });
         });
     });
 
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        // Simulate logout
-        console.log("Logging out...");
-        // In a real app: Firebase signOut() then loadScreen('welcome');
-        loadScreen('welcome');
+    dashboardScreenElement.querySelector('#logoutButton').addEventListener('click', () => {
+        if (typeof window.appSignOut === 'function') {
+            window.appSignOut(); // Call global signOut function from app.js
+        }
     });
+
+    // Apply fade-in animation
+    // Ensure dashboardScreenElement is not null before accessing style
+    if (dashboardScreenElement) {
+        dashboardScreenElement.style.opacity = 0;
+        dashboardScreenElement.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500 });
+    }
 }

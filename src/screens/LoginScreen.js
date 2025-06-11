@@ -1,7 +1,9 @@
 // src/screens/LoginScreen.js
-function renderLoginScreen() {
-    const root = document.getElementById('root');
-    root.innerHTML = `
+import { auth } from '../services/firebaseConfig.js'; // Import the auth instance
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth"; // Import auth functions
+
+export function renderLoginScreen(container) {
+    container.innerHTML = `
         <div class="login-screen" id="loginScreen">
             <div class="login-container">
                 <h2>Login</h2>
@@ -14,62 +16,82 @@ function renderLoginScreen() {
                     <input type="password" id="loginPassword" placeholder="Your password" required>
                 </div>
                 <button class="login-button" id="performLogin">Login</button>
+                <p id="loginErrorMessage" style="color: red; margin-top: 10px; min-height: 1.2em;"></p>
                 <div class="login-links">
+                    <a href="#" id="createAccountLink">Create Account</a>
                     <a href="#" id="forgotPassword">Forgot Password?</a>
-                    <a href="#" id="createAccount">Create Account</a>
                 </div>
                 <button class="back-button" id="backToWelcome">Back to Welcome</button>
             </div>
         </div>
     `;
 
-    // Event Listeners
-    const performLoginButton = document.getElementById('performLogin');
-    const backToWelcomeButton = document.getElementById('backToWelcome');
-    const loginEmailInput = document.getElementById('loginEmail');
-    const loginPasswordInput = document.getElementById('loginPassword');
+    const loginScreenElement = container.firstChild; // Assuming the screen is the first child
+    const performLoginButton = loginScreenElement.querySelector('#performLogin');
+    const backToWelcomeButton = loginScreenElement.querySelector('#backToWelcome');
+    const loginEmailInput = loginScreenElement.querySelector('#loginEmail');
+    const loginPasswordInput = loginScreenElement.querySelector('#loginPassword');
+    const createAccountLink = loginScreenElement.querySelector('#createAccountLink');
+    const forgotPasswordLink = loginScreenElement.querySelector('#forgotPassword');
+    const loginErrorMessage = loginScreenElement.querySelector('#loginErrorMessage');
 
-    // Placeholder links
-    document.getElementById('forgotPassword').addEventListener('click', (e) => {
+    forgotPasswordLink.addEventListener('click', (e) => {
         e.preventDefault();
+        loginErrorMessage.textContent = ''; // Clear previous errors
         alert('Forgot Password functionality not yet implemented.');
     });
-    document.getElementById('createAccount').addEventListener('click', (e) => {
+
+    createAccountLink.addEventListener('click', (e) => {
         e.preventDefault();
-        alert('Create Account functionality not yet implemented. Will integrate with Firebase Auth.');
-    });
-
-
-    performLoginButton.addEventListener('click', () => {
+        loginErrorMessage.textContent = ''; // Clear previous errors
         const email = loginEmailInput.value;
         const password = loginPasswordInput.value;
 
         if (!email || !password) {
-            alert('Please enter both email and password.');
+            loginErrorMessage.textContent = 'Please enter email and password to create an account.';
+            return;
+        }
+        if (password.length < 6) {
+            loginErrorMessage.textContent = 'Password should be at least 6 characters.';
             return;
         }
 
-        // Simulate login
-        console.log('Attempting login with:', email);
-        // Later, this will be:
-        // signInWithEmailAndPassword(auth, email, password)
-        //   .then((userCredential) => { /* loadScreen('dashboard'); */ })
-        //   .catch((error) => { alert(error.message); });
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                console.log('Account created successfully:', userCredential.user);
+                loginErrorMessage.textContent = 'Account created! Please login.';
+                loginEmailInput.value = ''; // Clear fields
+                loginPasswordInput.value = '';
+            })
+            .catch((error) => {
+                console.error("Error creating account:", error);
+                loginErrorMessage.textContent = error.message;
+            });
+    });
 
-        alert('Login successful (simulation)! Navigating to dashboard.');
-        // Perform fade out and load next screen
-        const loginScreenElement = document.getElementById('loginScreen');
-        loginScreenElement.classList.add('fade-out'); // Assuming fade-out is globally available
-        setTimeout(() => {
-            loadScreen('dashboard'); // Navigate to dashboard
-        }, 1000); // Match CSS transition time
+    performLoginButton.addEventListener('click', () => {
+        loginErrorMessage.textContent = ''; // Clear previous errors
+        const email = loginEmailInput.value;
+        const password = loginPasswordInput.value;
+
+        if (!email || !password) {
+            loginErrorMessage.textContent = 'Please enter both email and password.';
+            return;
+        }
+
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                console.log('Login successful:', userCredential.user);
+                // Navigation to dashboard will be handled by onAuthStateChanged in app.js
+                // No direct navigation call here.
+            })
+            .catch((error) => {
+                console.error("Error signing in:", error);
+                loginErrorMessage.textContent = error.message;
+            });
     });
 
     backToWelcomeButton.addEventListener('click', () => {
-        const loginScreenElement = document.getElementById('loginScreen');
-        loginScreenElement.classList.add('fade-out');
-         setTimeout(() => {
-            loadScreen('welcome'); // Navigate back to welcome screen
-        }, 1000);
+        window.loadScreen('welcome');
     });
 }

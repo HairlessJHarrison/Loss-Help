@@ -1,8 +1,14 @@
 body, html {
     height: 100%;
     margin: 0;
-    font-family: 'Helvetica Neue', Arial, sans-serif; /* Placeholder gentle typography */
+    font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; /* Updated font stack */
     overflow: hidden; /* To prevent scrollbars from background image */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 300; /* Default to light weight, can be overridden */
+    margin-bottom: 0.6em; /* Consistent bottom margin */
+    margin-top: 1em;
 }
 
 .welcome-screen {
@@ -544,4 +550,190 @@ body, html {
 }
 .mark-complete-button.completed:hover {
     background-color: #bbb;
+}
+
+/* Self-Care & Family Support Hub Styles */
+.self-care-hub-screen {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #f0f4f8; /* Softer, slightly warmer blue-grey */
+    padding: 20px;
+    box-sizing: border-box;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+    /* For slide-in, if navigated from somewhere other than main dashboard flow */
+    /* position: fixed; top:0; left:100%; height:100vh; overflow-y:auto; z-index:200; */
+    /* transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); */
+}
+/* .self-care-hub-screen.active { left: 0; } */
+
+.hub-header { /* Different from task-list-header, more centered and softer */
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 10px;
+}
+
+.hub-header .back-button-main-dashboard { /* Specific back button for this screen */
+    display: block; /* Or inline-block and adjust alignment */
+    text-align: left; /* Align arrow to the left */
+    margin-bottom: 20px;
+}
+
+.hub-header .back-button-main-dashboard .back-button-icon {
+    font-size: 1.8em;
+    color: #6a9bc3; /* Warmer blue */
+    text-decoration: none;
+    font-weight: bold;
+}
+.hub-header .back-button-main-dashboard .back-button-icon:hover {
+    color: #588aaf;
+}
+
+
+.hub-header h2 {
+    font-size: 2em;
+    color: #4a6b82; /* Deeper, softer blue */
+    font-weight: 300;
+    margin-bottom: 8px;
+}
+
+.hub-header p.subtitle {
+    font-size: 1.1em;
+    color: #5c7a90;
+    font-weight: 300;
+    max-width: 500px;
+    margin: 0 auto; /* Center subtitle */
+    line-height: 1.6;
+}
+
+.self-care-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto; /* Center cards container */
+}
+
+.self-care-card {
+    background-color: #ffffff;
+    border-radius: 12px; /* Softer, more rounded cards */
+    padding: 25px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e8f0; /* Soft border */
+}
+
+.self-care-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09);
+}
+
+.self-care-card .card-illustration { /* Placeholder for illustration */
+    font-size: 3em; /* Larger for illustrations */
+    margin-bottom: 20px;
+    color: #7c9cb5; /* Muted illustration color */
+}
+
+/* Placeholder illustrations */
+.illustration-heart::before { content: "💖"; } /* Simple heart */
+.illustration-hands::before { content: "🤝"; } /* Two hands */
+.illustration-family::before { content: "👨‍👧‍👦"; } /* Adult and children */
+.illustration-path::before { content: "🌱"; } /* Path/growth */
+
+.self-care-card h3 {
+    font-size: 1.3em;
+    font-weight: 400; /* Gentle but clear */
+    color: #4a6b82;
+    margin-bottom: 0; /* No margin if no paragraph */
+}
+
+/* Support Content Screen Styles */
+.support-content-screen {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #f8fafd; /* Slightly different, very light, calm blueish white */
+    padding: 20px; /* Standard padding */
+    box-sizing: border-box;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+    /* For slide-in behavior */
+    /* position: fixed; top:0; left:100%; height:100vh; overflow-y:auto; z-index:400; */
+    /* transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); */
+}
+/* .support-content-screen.active { left: 0; } */
+
+.support-content-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px; /* Less than task list for a tighter feel with illustration */
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e6eaf0;
+}
+
+.support-content-header .back-button-icon {
+    font-size: 1.8em;
+    color: #6a9bc3; /* Match SelfCareHub back button */
+    margin-right: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+}
+.support-content-header .back-button-icon:hover {
+    color: #588aaf;
+}
+
+.support-content-header h2 { /* Topic Title */
+    font-size: 1.7em;
+    color: #4a6b82; /* Match SelfCareHub titles */
+    font-weight: 400;
+    margin: 0;
+}
+
+.support-content-article {
+    padding: 0 10px; /* Align with list items padding if any, or just general content padding */
+    max-width: 700px; /* Optimal reading width */
+    margin: 0 auto; /* Center the article content */
+}
+
+.support-content-article .article-illustration {
+    font-size: 4em; /* Placeholder for a larger illustration */
+    text-align: center;
+    color: #a8c0d8; /* Softer color for placeholder illustration */
+    margin-bottom: 25px;
+    display: block;
+}
+/* Example specific illustration placeholder */
+.illustration-children-support::before { content: "👨‍👩‍👧‍👦"; /* Or a more abstract one */ }
+
+
+.support-content-article h3 { /* Subheadings within content if any */
+    font-size: 1.3em;
+    color: #50748e;
+    font-weight: 500;
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+.support-content-article p {
+    font-size: 1.1em; /* Good readability */
+    color: #334e68; /* Darker for readability, but not black */
+    line-height: 1.8; /* Generous line height */
+    margin-bottom: 20px;
+}
+
+.support-content-article ul {
+    padding-left: 30px;
+    margin-bottom: 20px;
+}
+.support-content-article ul li {
+    font-size: 1.05em;
+    color: #334e68;
+    line-height: 1.7;
+    margin-bottom: 10px;
 }
